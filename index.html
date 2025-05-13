@@ -1,26 +1,375 @@
 <!DOCTYPE html>
-<html>
+<html lang=&quot;en&quot; >
+
 <head>
-<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <meta charset=&quot;UTF-8&quot;>
+  
+
+    <link rel=&quot;apple-touch-icon&quot; type=&quot;image/png&quot; href=&quot;https://cpwebassets.codepen.io/assets/favicon/apple-touch-icon-5ae1a0698dcc2402e9712f7d01ed509a57814f994c660df9f7a952f3060705ee.png&quot; />
+
+    <meta name=&quot;apple-mobile-web-app-title&quot; content=&quot;CodePen&quot;>
+
+    <link rel=&quot;icon&quot; type=&quot;image/x-icon&quot; href=&quot;https://cpwebassets.codepen.io/assets/favicon/favicon-aec34940fbc1a6e787974dcd360f2c6b63348d4b1f4e06c77743096d55480f33.ico&quot; />
+
+    <link rel=&quot;mask-icon&quot; type=&quot;image/x-icon&quot; href=&quot;https://cpwebassets.codepen.io/assets/favicon/logo-pin-b4b4269c16397ad2f0f7a01bcdf513a1994f4c94b8af2f191c09eb0d601762b1.svg&quot; color=&quot;#111&quot; />
+
+
+
+  
+    <script src=&quot;https://cpwebassets.codepen.io/assets/common/stopExecutionOnTimeout-2c7831bb44f98c1391d6a4ffda0e1fd302503391ca806e7fcc7b9b87197aec26.js&quot;></script>
+
+
+  <title>MediaPipe HandLandmarker Task for web</title>
+
+    <link rel=&quot;canonical&quot; href=&quot;https://codepen.io/mediapipe-preview/pen/gOKBGPN&quot;>
+  
+  
+  
+  
+<style>
+/* Copyright 2023 The MediaPipe Authors.
+
+Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. */
+
+@use &quot;@material&quot;;
+body {
+  font-family: roboto;
+  margin: 2em;
+  color: #3d3d3d;
+  --mdc-theme-primary: #007f8b;
+  --mdc-theme-on-primary: #f1f3f4;
+}
+
+h1 {
+  color: #007f8b;
+}
+
+h2 {
+  clear: both;
+}
+
+em {
+  font-weight: bold;
+}
+
+video {
+  clear: both;
+  display: block;
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+  -moz-transform: rotateY(180deg);
+}
+
+section {
+  opacity: 1;
+  transition: opacity 500ms ease-in-out;
+}
+
+header,
+footer {
+  clear: both;
+}
+
+.removed {
+  display: none;
+}
+
+.invisible {
+  opacity: 0.2;
+}
+
+.note {
+  font-style: italic;
+  font-size: 130%;
+}
+
+.videoView,
+.detectOnClick {
+  position: relative;
+  float: left;
+  width: 48%;
+  margin: 2% 1%;
+  cursor: pointer;
+}
+
+.videoView p,
+.detectOnClick p {
+  position: absolute;
+  padding: 5px;
+  background-color: #007f8b;
+  color: #fff;
+  border: 1px dashed rgba(255, 255, 255, 0.7);
+  z-index: 2;
+  font-size: 12px;
+  margin: 0;
+}
+
+.highlighter {
+  background: rgba(0, 255, 0, 0.25);
+  border: 1px dashed #fff;
+  z-index: 1;
+  position: absolute;
+}
+
+.canvas {
+  z-index: 1;
+  position: absolute;
+  pointer-events: none;
+}
+
+.output_canvas {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+  -moz-transform: rotateY(180deg);
+}
+
+.detectOnClick {
+  z-index: 0;
+}
+
+.detectOnClick img {
+  width: 100%;
+}
+</style>
+
+  <script>
+  window.console = window.console || function(t) {};
+</script>
+
+  
+  
 </head>
 
+<body translate=&quot;no&quot;>
+  <!-- Copyright 2023 The MediaPipe Authors.
+
+Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. -->
+<link href=&quot;https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css&quot; rel=&quot;stylesheet&quot;>
+<script src=&quot;https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js&quot;></script>
+<script src=&quot;https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js&quot; crossorigin=&quot;anonymous&quot;></script>
+<script src=&quot;https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js&quot; crossorigin=&quot;anonymous&quot;></script>
+
 <body>
+  <h1>Hand landmark detection using the MediaPipe HandLandmarker task</h1>
+
+  <section id=&quot;demos&quot; class=&quot;invisible&quot;>
+    <h2>Demo: Detecting Images</h2>
+    <p><b>Click on an image below</b> to see the key landmarks of the hands.</p>
+
+    <div class=&quot;detectOnClick&quot;>
+      <img src=&quot;https://assets.codepen.io/9177687/hand-ge4ca13f5d_1920.jpg&quot; width=&quot;100%&quot; crossorigin=&quot;anonymous&quot; title=&quot;Click to get detection!&quot; />
+    </div>
+    <div class=&quot;detectOnClick&quot;>
+      <img src=&quot;https://assets.codepen.io/9177687/couple-gb7cb5db4c_1920.jpg&quot; width=&quot;100%&quot; crossorigin=&quot;anonymous&quot; title=&quot;Click to get detection!&quot; />
+    </div>
+
     <h2>Demo: Webcam continuous hands landmarks detection</h2>
     <p>Hold your hand in front of your webcam to get real-time hand landmarker detection.</br>Click <b>enable webcam</b> below and grant access to the webcam if prompted.</p>
 
-    <div id="liveView" class="videoView">
-      <button id="webcamButton" class="mdc-button mdc-button--raised">
-        <span class="mdc-button__ripple"></span>
-        <span class="mdc-button__label">ENABLE WEBCAM</span>
+    <div id=&quot;liveView&quot; class=&quot;videoView&quot;>
+      <button id=&quot;webcamButton&quot; class=&quot;mdc-button mdc-button--raised&quot;>
+        <span class=&quot;mdc-button__ripple&quot;></span>
+        <span class=&quot;mdc-button__label&quot;>ENABLE WEBCAM</span>
       </button>
-      <div style="position: relative;">
-        <video id="webcam" style="position: abso" autoplay playsinline></video>
-        <canvas class="output_canvas" id="output_canvas" style="position: absolute; left: 0px; top: 0px;"></canvas>
+      <div style=&quot;position: relative;&quot;>
+        <video id=&quot;webcam&quot; style=&quot;position: abso&quot; autoplay playsinline></video>
+        <canvas class=&quot;output_canvas&quot; id=&quot;output_canvas&quot; style=&quot;position: absolute; left: 0px; top: 0px;&quot;></canvas>
       </div>
     </div>
   </section>
+  
+      <script id=&quot;rendered-js&quot; type=&quot;module&quot;>
+// Copyright 2023 The MediaPipe Authors.
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//      http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { HandLandmarker, FilesetResolver } from &quot;https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0&quot;;
+const demosSection = document.getElementById(&quot;demos&quot;);
+let handLandmarker = undefined;
+let runningMode = &quot;IMAGE&quot;;
+let enableWebcamButton;
+let webcamRunning = false;
+// Before we can use HandLandmarker class we must wait for it to finish
+// loading. Machine Learning models can be large and take a moment to
+// get everything needed to run.
+const createHandLandmarker = async () => {
+    const vision = await FilesetResolver.forVisionTasks(&quot;https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm&quot;);
+    handLandmarker = await HandLandmarker.createFromOptions(vision, {
+        baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+            delegate: &quot;GPU&quot;
+        },
+        runningMode: runningMode,
+        numHands: 2
+    });
+    demosSection.classList.remove(&quot;invisible&quot;);
+};
+createHandLandmarker();
+/********************************************************************
+// Demo 1: Grab a bunch of images from the page and detection them
+// upon click.
+********************************************************************/
+// In this demo, we have put all our clickable images in divs with the
+// CSS class 'detectionOnClick'. Lets get all the elements that have
+// this class.
+const imageContainers = document.getElementsByClassName(&quot;detectOnClick&quot;);
+// Now let's go through all of these and add a click event listener.
+for (let i = 0; i < imageContainers.length; i++) {
+    // Add event listener to the child element whichis the img element.
+    imageContainers[i].children[0].addEventListener(&quot;click&quot;, handleClick);
+}
+// When an image is clicked, let's detect it and display results!
+async function handleClick(event) {
+    if (!handLandmarker) {
+        console.log(&quot;Wait for handLandmarker to load before clicking!&quot;);
+        return;
+    }
+    if (runningMode === &quot;VIDEO&quot;) {
+        runningMode = &quot;IMAGE&quot;;
+        await handLandmarker.setOptions({ runningMode: &quot;IMAGE&quot; });
+    }
+    // Remove all landmarks drawed before
+    const allCanvas = event.target.parentNode.getElementsByClassName(&quot;canvas&quot;);
+    for (var i = allCanvas.length - 1; i >= 0; i--) {
+        const n = allCanvas[i];
+        n.parentNode.removeChild(n);
+    }
+    // We can call handLandmarker.detect as many times as we like with
+    // different image data each time. This returns a promise
+    // which we wait to complete and then call a function to
+    // print out the results of the prediction.
+    const handLandmarkerResult = handLandmarker.detect(event.target);
+    console.log(handLandmarkerResult.handednesses[0][0]);
+    const canvas = document.createElement(&quot;canvas&quot;);
+    canvas.setAttribute(&quot;class&quot;, &quot;canvas&quot;);
+    canvas.setAttribute(&quot;width&quot;, event.target.naturalWidth + &quot;px&quot;);
+    canvas.setAttribute(&quot;height&quot;, event.target.naturalHeight + &quot;px&quot;);
+    canvas.style =
+        &quot;left: 0px;&quot; +
+            &quot;top: 0px;&quot; +
+            &quot;width: &quot; +
+            event.target.width +
+            &quot;px;&quot; +
+            &quot;height: &quot; +
+            event.target.height +
+            &quot;px;&quot;;
+    event.target.parentNode.appendChild(canvas);
+    const cxt = canvas.getContext(&quot;2d&quot;);
+    for (const landmarks of handLandmarkerResult.landmarks) {
+        drawConnectors(cxt, landmarks, HAND_CONNECTIONS, {
+            color: &quot;#00FF00&quot;,
+            lineWidth: 5
+        });
+        drawLandmarks(cxt, landmarks, { color: &quot;#FF0000&quot;, lineWidth: 1 });
+    }
+}
+/********************************************************************
+// Demo 2: Continuously grab image from webcam stream and detect it.
+********************************************************************/
+const video = document.getElementById(&quot;webcam&quot;);
+const canvasElement = document.getElementById(&quot;output_canvas&quot;);
+const canvasCtx = canvasElement.getContext(&quot;2d&quot;);
+// Check if webcam access is supported.
+const hasGetUserMedia = () => { var _a; return !!((_a = navigator.mediaDevices) === null || _a === void 0 ? void 0 : _a.getUserMedia); };
+// If webcam supported, add event listener to button for when user
+// wants to activate it.
+if (hasGetUserMedia()) {
+    enableWebcamButton = document.getElementById(&quot;webcamButton&quot;);
+    enableWebcamButton.addEventListener(&quot;click&quot;, enableCam);
+}
+else {
+    console.warn(&quot;getUserMedia() is not supported by your browser&quot;);
+}
+// Enable the live webcam view and start detection.
+function enableCam(event) {
+    if (!handLandmarker) {
+        console.log(&quot;Wait! objectDetector not loaded yet.&quot;);
+        return;
+    }
+    if (webcamRunning === true) {
+        webcamRunning = false;
+        enableWebcamButton.innerText = &quot;ENABLE PREDICTIONS&quot;;
+    }
+    else {
+        webcamRunning = true;
+        enableWebcamButton.innerText = &quot;DISABLE PREDICTIONS&quot;;
+    }
+    // getUsermedia parameters.
+    const constraints = {
+        video: true
+    };
+    // Activate the webcam stream.
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+        video.srcObject = stream;
+        video.addEventListener(&quot;loadeddata&quot;, predictWebcam);
+    });
+}
+let lastVideoTime = -1;
+let results = undefined;
+console.log(video);
+async function predictWebcam() {
+    canvasElement.style.width = video.videoWidth;
+    ;
+    canvasElement.style.height = video.videoHeight;
+    canvasElement.width = video.videoWidth;
+    canvasElement.height = video.videoHeight;
+    // Now let's start detecting the stream.
+    if (runningMode === &quot;IMAGE&quot;) {
+        runningMode = &quot;VIDEO&quot;;
+        await handLandmarker.setOptions({ runningMode: &quot;VIDEO&quot; });
+    }
+    let startTimeMs = performance.now();
+    if (lastVideoTime !== video.currentTime) {
+        lastVideoTime = video.currentTime;
+        results = handLandmarker.detectForVideo(video, startTimeMs);
+    }
+    canvasCtx.save();
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    if (results.landmarks) {
+        for (const landmarks of results.landmarks) {
+            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+                color: &quot;#00FF00&quot;,
+                lineWidth: 5
+            });
+            drawLandmarks(canvasCtx, landmarks, { color: &quot;#FF0000&quot;, lineWidth: 2 });
+        }
+    }
+    canvasCtx.restore();
+    // Call this function again to keep predicting when the browser is ready.
+    if (webcamRunning === true) {
+        window.requestAnimationFrame(predictWebcam);
+    }
+}
+//# sourceURL=pen.js
+    </script>
+
+  
 </body>
+
 </html>
